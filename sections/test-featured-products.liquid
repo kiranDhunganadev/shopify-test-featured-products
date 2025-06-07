@@ -1,0 +1,156 @@
+
+
+{{ 'featured-products.css' | asset_url | stylesheet_tag }}
+
+{% schema %}
+{
+  "name": "Test Featured Products",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Section Title",
+      "default": "Featured Products"
+    },
+    {
+      "type": "text",
+      "id": "subtitle",
+      "label": "Section Subtitle",
+      "default": "Shop our curated collection"
+    },
+    {
+      "type": "number",
+      "id": "items_per_row",
+      "label": "Items per Row",
+      "default": 4
+    },
+    {
+      "type": "text",
+      "id": "min_column_width",
+      "label": "Min Column Width (px)",
+      "default": "250px"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "product",
+      "name": "Product",
+      "settings": [
+        {
+          "type": "product",
+          "id": "product",
+          "label": "Select Product"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Test Featured Products",
+      "blocks": []
+    }
+  ]
+}
+{% endschema %}
+
+<div class="featured-products-section">
+  {% if section.settings.title %}
+    <h2>{{ section.settings.title }}</h2>
+  {% endif %}
+  
+  {% if section.settings.subtitle %}
+    <p class="featured-product-subtitle">{{ section.settings.subtitle }}</p>
+  {% endif %}
+
+  {% if section.blocks.size > 0 %}
+    <div 
+      class="products-grid" 
+      style="grid-template-columns: repeat({{ section.settings.items_per_row }}, minmax({{ section.settings.min_column_width }}, 1fr));"
+    >
+      {% for block in section.blocks %}
+        {% if block.settings.product != blank %}
+          {% assign product = block.settings.product %}
+        
+          <div class="product-card">
+              <a href="{{ product.url }}" class="product-link" > 
+            {% if product.compare_at_price > product.price %}
+              <div class="product-price">
+                <p class="product-compare-price">{{ product.compare_at_price | money }}</p>
+                <p class="product-price">{{ product.price | money }}</p>
+              </div>
+            {% else %}
+              <p class="product-price">{{ product.price | money }}</p>
+            {% endif %}
+
+            <p class="product-vendor">{{ product.vendor }}</p>
+
+            {% assign title_color = product.metafields.boa_test.title_color.value %}
+            <p class="product-title" style="color: {{ title_color | default: '#FF0000' }}">{{ product.title }}</p>
+
+            {% if product.featured_image %}
+              <img src="{{ product.featured_image | image_url: width: 400 }}" alt="{{ product.title }}" class="product-image" />
+            {% endif %}
+
+            <form method="post" action="/cart/add">
+              <input type="hidden" name="id" value="{{ product.variants.first.id }}" />
+              <input type="hidden" name="quantity" value="1" />
+              <input type="hidden" name="return_to" value="/cart" />
+              <button type="submit" class="add-to-cart-button">
+                Add to Cart
+              </button>
+            </form>
+
+            <div id="product-{{ product.id }}-placeholder"></div>
+                </a>
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+  {% elsif template.name == 'collection' and collection.products_count > 0 %}
+    <div 
+      class="products-grid" 
+      style="grid-template-columns: repeat({{ section.settings.items_per_row }}, minmax({{ section.settings.min_column_width }}, 1fr));"
+    >
+      {% for product in collection.products limit: 10 %}
+         <a href="{{ product.url }}" class="product-link" > 
+        <div class="product-card">
+          {% if product.compare_at_price > product.price %}
+            <div class="product-price">
+              <p class="product-compare-price">{{ product.compare_at_price | money }}</p>
+              <p class="product-price">{{ product.price | money }}</p>
+            </div>
+          {% else %}
+            <p class="product-price">{{ product.price | money }}</p>
+          {% endif %}
+
+          <p class="product-vendor">{{ product.vendor }}</p>
+
+          {% assign title_color = product.metafields.boa_test.title_color.value %}
+          <p class="product-title" style="color: {{ title_color | default: '#FF0000' }}">{{ product.title }}</p>
+
+          {% if product.featured_image %}
+            <img src="{{ product.featured_image | image_url: width: 400  }}" alt="{{ product.title }}" class="product-image" />
+          {% endif %}
+
+          <form method="post" action="/cart/add">
+            <input type="hidden" name="id" value="{{ product.variants.first.id }}" />
+            <input type="hidden" name="quantity" value="1" />
+            <input type="hidden" name="return_to" value="/cart" />
+            <button type="submit" class="add-to-cart-button">
+              Add to Cart
+            </button>
+          </form>
+
+          <div id="product-{{ product.id }}-placeholder"></div>
+        </div>
+              </a>
+      {% endfor %}
+      
+    </div>
+
+  {% else %}
+    <p>No products available</p>
+  {% endif %}
+</div>
